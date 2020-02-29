@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	//"github.com/carbonblack/binee/machofile"
+	"github.com/carbonblack/binee/macos"
 	"github.com/carbonblack/binee/pefile"
 	"github.com/carbonblack/binee/util"
 	"github.com/carbonblack/binee/windows"
@@ -25,6 +27,7 @@ func main() {
 	verbose2 := flag.Bool("vv", false, "verbose level 2")
 	verbose1 := flag.Bool("v", false, "verbose level 1")
 	runDLLMain := flag.Bool("m", false, "call DLLMain while loading DLLs")
+	machox64 := flag.String("M", "", "specify path to 64-bit mach-o file")
 	rootFolder := flag.String("r", "os/win10_32/", "root path of mock file system, defaults to ./os/win10_32")
 	maxTicks := flag.Int64("t", 0, "maximum number of instructions to emulate before stopping emulation, default is 0 and will run forever or until other stopping event")
 
@@ -111,6 +114,25 @@ func main() {
 				fmt.Println(export.Name)
 			}
 		}
+		return
+	}
+
+	if *machox64 != "" {
+		options := macos.InitMacEmulatorOptions()
+		options.VerboseLevel = verboseLevel
+		options.ConfigPath = *configFilePath
+		options.RootFolder = *rootFolder
+		options.MaxTicks = *maxTicks
+		// probably need to change these log functions and put them in util
+		// or something
+		if *outputJSON {
+			options.LogType = windows.LogTypeJSON
+		} else if *instructionLog {
+			options.LogType = windows.LogTypeSlice
+		} else {
+			options.LogType = windows.LogTypeStdout
+		}
+		fmt.Printf("hello mach-o!\n")
 		return
 	}
 
