@@ -1,6 +1,5 @@
 package macos
 
-/*
 import (
 	"encoding/binary"
 	"io/ioutil"
@@ -15,7 +14,6 @@ import (
 	"github.com/carbonblack/binee/core"
 	"github.com/carbonblack/binee/machofile"
 )
-*/
 
 // Env is the key/value pair for specifying environment variables for the
 // emulated process
@@ -59,21 +57,21 @@ type WinOptions struct {
 	} `yaml:"system_time"`
 	User string `yaml:"user"`
 }
-
-// WinEmulator type should be a emulator type the eventually will support the
+*/
+// MacEmulator type should be a emulator type the eventually will support the
 // Emulator interface. This particular emulator is generic to x86 32/64 bit.
-type WinEmulator struct {
-	UcMode             int
-	UcArch             int
-	PtrSize            uint64
-	Uc                 uc.Unicorn
-	Timestamp          int64
-	Ticks              uint64
-	maxTicks           uint64
-	logType            int
-	InstructionLog     []*InstructionLog
-	Binary             string
-	Verbosity          int
+type MacEmulator struct {
+	UcMode         int
+	UcArch         int
+	PtrSize        uint64
+	Uc             uc.Unicorn
+	Timestamp      int64
+	Ticks          uint64
+	maxTicks       uint64
+	logType        int
+	InstructionLog []*InstructionLog
+	Binary         string
+	Verbosity      int
 	// may add functionality here for custom dylds
 	//ShowDll            bool
 	Args               []string
@@ -95,13 +93,14 @@ type WinEmulator struct {
 	CPU                *core.CpuManager
 	Scheduler          *ScheduleManager
 	Fls                [64]uint64
-	Opts               WinOptions
+	Opts               MacOptions
 	// these commands are used to keep state during single step mode
 	LastCommand  string
 	Breakpoints  map[uint64]uint64
 	AutoContinue bool
 }
 
+/*
 // AddHook makes a new function hook available to the emulated process
 func (emu *WinEmulator) AddHook(lib string, fname string, hook *Hook) {
 	emu.nameToHook[fname] = hook
@@ -124,7 +123,7 @@ func (emu *WinEmulator) GetHook(addr uint64) (string, string, *Hook) {
 	return "", "", nil
 }
 */
-// defines the basic log types available in winemulator, avaialble to be set via
+// defines the basic log types available in macemulator, avaialble to be set via
 // command line flags
 const (
 	LogTypeStdout = iota
@@ -156,17 +155,16 @@ func InitMacEmulatorOptions() *MacEmulatorOptions {
 	}
 }
 
-/*
 // Load is the entry point for loading a PE file in the emulated environment
-func Load(path string, args []string, options *WinEmulatorOptions) (*WinEmulator, error) {
+func Load(path string, args []string, options *MacEmulatorOptions) (*MacEmulator, error) {
 	if options == nil {
-		options = InitWinEmulatorOptions()
+		options = InitMacEmulatorOptions()
 	}
 
 	var err error
 
-	//load the PE
-	pe, err := pefile.LoadPeFile(path)
+	//load the mach-o file
+	machofile, err := machofile.LoadMachOFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +172,7 @@ func Load(path string, args []string, options *WinEmulatorOptions) (*WinEmulator
 	return LoadMem(pe, path, args, options)
 }
 
+/*
 // LoadMem will load a pefile from an already initiated object
 func LoadMem(pe *pefile.PeFile, path string, args []string, options *WinEmulatorOptions) (*WinEmulator, error) {
 	var err error
