@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"debug/macho"
-	"encoding/binary"
+	//"encoding/binary"
 	"fmt"
-	"io"
-	"log"
+	//"io"
+	//"log"
 	"math"
 	"os"
-	"strings"
-	"unicode/utf16"
-	"unicode/utf8"
+	//"strings"
+	//"unicode/utf16"
+	//"unicode/utf8"
 )
 
 type DataDirectory struct {
@@ -70,11 +70,12 @@ type MachOFileHeader struct {
 }
 
 type MachOFile struct {
-	MFile []*macho.File
+	MFile *macho.File
 	Path  string
 	//Name             string //import name, apiset or on disk
 	//RealName         string //on disk short name
-	Sha256         string
+	Sha256 string
+	//Sections	   *macho.File.Sections
 	Sections       []*Section
 	sectionHeaders []*macho.SectionHeader
 	Segments       []*Segment
@@ -136,10 +137,167 @@ func LoadMachOFile(path string) (*MachOFile, error) {
 	}
 	machofile.Size = size
 
+	if err := analyzeMachOFile(data, machofile); err != nil {
+		return nil, err
+	}
+
+	//fmt.Sprintf("{ Path: %s }", machofile.Path)
+	fmt.Printf("LoadMachOFile:path: %s\n", machofile.Path)
+	//fmt.Printf("LoadMachOFile:sha256: %s\n", machofile.Sha256)
+	//fmt.Printf("LoadMachOFile:magic: %d\n", machofile.MFile.Magic)
+
+	return machofile, err
+}
+
+// LoadMachOBytes will take a Mach-O file in the form of an in memory byte array and parse it
+func LoadMachOBytes(data []byte, name string) (*MachOFile, error) {
+	machofile := &MachOFile{Path: name}
+	machofile.Size = int64(len(data))
+	if err := analyzeMachOFile(data, machofile); err != nil {
+		return nil, err
+	}
+	return machofile, nil
+}
+
+// Sha256Sum will calcuate the sha256 of the supplied byte slice
+func Sha256Sum(b []byte) (hexsum string) {
+	sum := sha256.Sum256(b)
+	hexsum = fmt.Sprintf("%x", sum)
+	return
+}
+
+// analyzeMachOFile is the core parser for Mach-O files
+func analyzeMachOFile(data []byte, machofile *MachOFile) error {
+	//var err error
+
+	machofile.Sha256 = Sha256Sum(data)
+
+	//create reader at offset 0
+	r := bytes.NewReader(data)
+	fmt.Printf("r len: %d \n", r.Len())
+
+	// read in MachOHeader
+	//(machofile.MFile, err) = macho.NewFile(r)
+
 	/*
-		if err := analyzePeFile(data, machofile); err != nil {
-			return nil, err
+		if err = binary.Read(r, binary.LittleEndian, pe.DosHeader); err != nil {
+			return fmt.Errorf("Error reading dosHeader from file %s: %v", pe.Path, err)
 		}
 	*/
-	return machofile, nil
+
+	/*
+		// read CoffHeader into struct
+		pe.CoffHeader = &CoffHeader{}
+		if err = binary.Read(r, binary.LittleEndian, pe.CoffHeader); err != nil {
+			return fmt.Errorf("Error reading coffHeader in file %s: %v", pe.Path, err)
+		}
+
+		// advance reader to start of OptionalHeader(32|32+)
+		if _, err = r.Seek(int64(pe.DosHeader.AddressExeHeader)+4+int64(binary.Size(CoffHeader{})), io.SeekStart); err != nil {
+			return fmt.Errorf("Error seeking to optionalHeader in file %s: %v", pe.Path, err)
+		}
+	*/
+	/*
+		// check if pe or pe+, read 2 bytes to get Magic then seek backward two bytes
+		var _magic uint16
+		if err := binary.Read(r, binary.LittleEndian, &_magic); err != nil {
+			return fmt.Errorf("Error reading in magic")
+		}
+
+		// check magic, must be a PE or PE+
+		if _magic == 0x10b {
+			pe.PeType = Pe32
+		} else if _magic == 0x20b {
+			pe.PeType = Pe32p
+		} else {
+			return fmt.Errorf("invalid magic, must be PE or PE+")
+		}
+
+		if _, err = r.Seek(int64(pe.DosHeader.AddressExeHeader)+4+int64(binary.Size(CoffHeader{})), io.SeekStart); err != nil {
+			return fmt.Errorf("Error seeking to optionalHeader in file %s: %v", pe.Path, err)
+		}
+
+		// copy the optional headers into their respective structs
+		if pe.PeType == Pe32 {
+			pe.OptionalHeader = &OptionalHeader32{}
+			if err = binary.Read(r, binary.LittleEndian, pe.OptionalHeader); err != nil {
+				return fmt.Errorf("Error reading optionalHeader32 in file %s: %v", pe.Path, err)
+			}
+		} else {
+			pe.OptionalHeader = &OptionalHeader32P{}
+			if err = binary.Read(r, binary.LittleEndian, pe.OptionalHeader); err != nil {
+				return fmt.Errorf("Error reading optionalHeader32p in file %s: %v", pe.Path, err)
+			}
+		}
+
+		//loop through each section and create Section structs
+		sectionsStart := int64(0)
+		if pe.PeType == Pe32 {
+			sectionsStart = int64(pe.DosHeader.AddressExeHeader) + 4 + int64(binary.Size(CoffHeader{})) + int64(binary.Size(OptionalHeader32{}))
+		} else {
+			sectionsStart = int64(pe.DosHeader.AddressExeHeader) + 4 + int64(binary.Size(CoffHeader{})) + int64(binary.Size(OptionalHeader32P{}))
+		}
+
+		// section start will be the end of the data we keep for Raw headers
+
+		// create slice to hold Section pointers
+		pe.Sections = make([]*Section, int(pe.CoffHeader.NumberOfSections))
+		pe.sectionHeaders = make([]*SectionHeader, int(pe.CoffHeader.NumberOfSections))
+
+		// loop over each section and populate struct
+		for i := 0; i < int(pe.CoffHeader.NumberOfSections); i++ {
+			if _, err = r.Seek(sectionsStart+int64(binary.Size(SectionHeader{})*i), io.SeekStart); err != nil {
+				return fmt.Errorf("Error seeking over sections in file %s: %v", pe.Path, err)
+			}
+
+			temp := SectionHeader{}
+			if err = binary.Read(r, binary.LittleEndian, &temp); err != nil {
+				return fmt.Errorf("Error reading section[%d] in file %s: %v", i, pe.Path, err)
+			}
+			pe.sectionHeaders[i] = &temp
+
+			pe.Sections[i] = &Section{}
+			pe.Sections[i].Name = string(temp.Name[:8])
+			pe.Sections[i].VirtualSize = temp.VirtualSize
+			pe.Sections[i].VirtualAddress = temp.VirtualAddress
+			pe.Sections[i].Size = temp.Size
+			pe.Sections[i].Offset = temp.Offset
+			pe.Sections[i].PointerToRelocations = temp.PointerToRelocations
+			pe.Sections[i].PointerToLineNumbers = temp.PointerToLineNumbers
+			pe.Sections[i].NumberOfRelocations = temp.NumberOfRelocations
+			pe.Sections[i].NumberOfLineNumbers = temp.NumberOfLineNumbers
+			pe.Sections[i].Characteristics = temp.Characteristics
+
+			if _, err = r.Seek(int64(temp.Offset), io.SeekStart); err != nil {
+				return fmt.Errorf("Error seeking offset in section[%s] of file %s: %v", pe.Sections[i].Name, pe.Path, err)
+			}
+			raw := make([]byte, temp.Size)
+			if _, err = r.Read(raw); err != nil {
+				if err == io.EOF {
+					pe.Sections[i].Raw = nil
+					continue
+				}
+				return fmt.Errorf("Error reading bytes at offset[0x%x] in section[%s] of file %s: %v", pe.Sections[i].Offset, pe.Sections[i].Name, pe.Path, err)
+			}
+			pe.Sections[i].Raw = raw
+			pe.Sections[i].Entropy = entropy(raw)
+		}
+
+		pe.RawHeaders = data[0:pe.Sections[0].Offset]
+		pe.readImports()
+		if err = pe.readExports(); err != nil {
+			return err
+		}
+		pe.readApiset()
+	*/
+
+	return nil
+}
+
+func readString(b []byte) string {
+	for i := 0; ; i++ {
+		if b[i] == 0x0 {
+			return string(b[0:i])
+		}
+	}
 }

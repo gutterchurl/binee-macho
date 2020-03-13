@@ -3,11 +3,12 @@
 package main
 
 import (
+	"debug/macho"
 	"flag"
 	"fmt"
 	"log"
 
-	//"github.com/carbonblack/binee/machofile"
+	"github.com/carbonblack/binee/machofile"
 	"github.com/carbonblack/binee/macos"
 	"github.com/carbonblack/binee/pefile"
 	"github.com/carbonblack/binee/util"
@@ -132,7 +133,27 @@ func main() {
 		} else {
 			options.LogType = windows.LogTypeStdout
 		}
+		// test code:
+
 		fmt.Printf("hello mach-o!\n")
+		if m, err := machofile.LoadMachOFile(flag.Arg(0)); err == nil {
+			fmt.Println(m.Sections)
+		}
+
+		if mfile, err := macho.Open(flag.Arg(0)); err == nil {
+			fmt.Printf("fh Magic: %#x\n", mfile.FileHeader.Magic)
+		}
+
+		//fmt.Printf(m.)
+		/*
+			// now start the emulator with the various options
+			emu, err := macos.Load(flag.Arg(0), flag.Args()[1:], options)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			emu.Start()
+		*/
 		return
 	}
 

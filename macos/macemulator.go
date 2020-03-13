@@ -1,13 +1,14 @@
 package macos
 
 import (
-	"encoding/binary"
-	"io/ioutil"
-	"os"
-	"sort"
+	//"encoding/binary"
+	"fmt"
+	//"io/ioutil"
+	//"os"
+	//"sort"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	//"gopkg.in/yaml.v2"
 
 	uc "github.com/unicorn-engine/unicorn/bindings/go/unicorn"
 
@@ -41,8 +42,6 @@ type WinOptions struct {
 	ProcessorType      int               `yaml:"processsor_type"`
 	ProcessorLevel     int               `yaml:"processor_level"`
 	ProcessorRevision  int               `yaml:"processor_revision"`
-	TempRegistry       map[string]string `yaml:"registry"`
-	MockRegistry       []Reg
 	Root               string `yaml:"root"`
 	LocaleSortOrder    int    `yaml:"locale_sort_order"`
 	SystemTime         struct {
@@ -58,6 +57,7 @@ type WinOptions struct {
 	User string `yaml:"user"`
 }
 */
+
 // MacEmulator type should be a emulator type the eventually will support the
 // Emulator interface. This particular emulator is generic to x86 32/64 bit.
 type MacEmulator struct {
@@ -74,26 +74,25 @@ type MacEmulator struct {
 	Verbosity      int
 	// may add functionality here for custom dylds
 	//ShowDll            bool
-	Args               []string
-	Argc               uint64
-	Argv               uint64
-	SearchPath         []string
-	Seed               int
-	nameToHook         map[string]*Hook
+	Args       []string
+	Argc       uint64
+	Argv       uint64
+	SearchPath []string
+	Seed       int
+	//nameToHook         map[string]*Hook
 	libFunctionAddress map[string]map[string]uint64
 	libAddressFunction map[string]map[uint64]string
 	libRealLib         map[string]string //set up in loader in loadLibs
 	EntryPoint         uint64
 	NextLibAddress     uint64
-	MemRegions         *MemRegions
-	Handles            map[uint64]*Handle
-	LoadedModules      map[string]uint64
-	Heap               *core.HeapManager
-	Registry           *Registry
-	CPU                *core.CpuManager
-	Scheduler          *ScheduleManager
-	Fls                [64]uint64
-	Opts               MacOptions
+	//MemRegions         *MemRegions
+	//Handles            map[uint64]*Handle
+	LoadedModules map[string]uint64
+	Heap          *core.HeapManager
+	CPU           *core.CpuManager
+	//Scheduler          *ScheduleManager
+	Fls [64]uint64
+	//Opts               MacOptions
 	// these commands are used to keep state during single step mode
 	LastCommand  string
 	Breakpoints  map[uint64]uint64
@@ -102,13 +101,13 @@ type MacEmulator struct {
 
 /*
 // AddHook makes a new function hook available to the emulated process
-func (emu *WinEmulator) AddHook(lib string, fname string, hook *Hook) {
+func (emu *MacEmulator) AddHook(lib string, fname string, hook *Hook) {
 	emu.nameToHook[fname] = hook
 }
 
 // GetHook will get a hook from the list of available hooks, returning the dll,
 // function name and hook object
-func (emu *WinEmulator) GetHook(addr uint64) (string, string, *Hook) {
+func (emu *MacEmulator) GetHook(addr uint64) (string, string, *Hook) {
 	// check if the current address is in some mapped library
 	if lib := emu.lookupLibByAddress(addr); lib != "" {
 		//check if named function has a hook defined
@@ -123,6 +122,7 @@ func (emu *WinEmulator) GetHook(addr uint64) (string, string, *Hook) {
 	return "", "", nil
 }
 */
+
 // defines the basic log types available in macemulator, avaialble to be set via
 // command line flags
 const (
@@ -164,12 +164,32 @@ func Load(path string, args []string, options *MacEmulatorOptions) (*MacEmulator
 	var err error
 
 	//load the mach-o file
-	machofile, err := machofile.LoadMachOFile(path)
+	file, err := machofile.LoadMachOFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return LoadMem(pe, path, args, options)
+	return LoadMem(file, path, args, options)
+}
+
+// LoadMem will load a pefile from an already initiated object
+func LoadMem(mfile *machofile.MachOFile, path string, args []string, options *MacEmulatorOptions) (*MacEmulator, error) {
+	var err error
+	emu := &MacEmulator{}
+	emu.UcArch = uc.ARCH_X86
+	// assuming 64-bit only
+	emu.UcMode = uc.MODE_64
+	emu.Timestamp = time.Now().Unix()
+	emu.Ticks = 1
+	emu.maxTicks = uint64(options.MaxTicks)
+	emu.logType = options.LogType
+	// log instructions only if the flag is set
+	if emu.logType == LogTypeSlice {
+		emu.InstructionLog = make([]*InstructionLog, 0)
+	}
+
+	fmt.Print("LoadMem fn\n")
+	return emu, err
 }
 
 /*
