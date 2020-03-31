@@ -135,13 +135,26 @@ func main() {
 		}
 		// test code:
 
-		fmt.Printf("hello mach-o!\n")
+		fmt.Printf("hello mach-o! %s\n", flag.Arg(0))
 		if m, err := machofile.LoadMachOFile(flag.Arg(0)); err == nil {
-			fmt.Println(m.Sections)
+			fmt.Println(m.MFile)
+
+			/* This causes a segfault
+			seg := m.MFile.Segment("__DATA")
+			if seg != nil {
+				fmt.Println(seg.Addr, seg.Addr+seg.Memsz)
+				//fmt.Println(seg)
+			}*/
 		}
 
 		if mfile, err := macho.Open(flag.Arg(0)); err == nil {
 			fmt.Printf("fh Magic: %#x\n", mfile.FileHeader.Magic)
+			seg := mfile.Segment("__DATA")
+			if seg != nil {
+				fmt.Println(seg.Addr, seg.Addr+seg.Memsz)
+				fmt.Println(mfile.Sections)
+				//fmt.Println(seg)
+			}
 		}
 
 		//fmt.Printf(m.)

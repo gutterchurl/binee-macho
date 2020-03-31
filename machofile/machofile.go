@@ -20,6 +20,7 @@ type DataDirectory struct {
 	Size           uint32
 }
 
+/*
 // Actually Section64 but leaving it this way for now
 type Section struct {
 	Name     [16]byte
@@ -43,6 +44,7 @@ type Section struct {
 	Raw                  []byte
 	Entropy              float64
 }
+*/
 
 type Segment struct {
 	Name                 string
@@ -76,7 +78,7 @@ type MachOFile struct {
 	//RealName         string //on disk short name
 	Sha256 string
 	//Sections	   *macho.File.Sections
-	Sections       []*Section
+	//Sections       []*Section
 	sectionHeaders []*macho.SectionHeader
 	Segments       []*Segment
 	segmentHeaders []*macho.SegmentHeader
@@ -135,7 +137,22 @@ func LoadMachOFile(path string) (*MachOFile, error) {
 	if _, err = file.Read(data); err != nil {
 		return nil, fmt.Errorf("Error copying file %s into buffer: %v", path, err)
 	}
-	machofile.Size = size
+
+	// open file as debug/macho File to populate struct
+	if mfile, err := macho.Open(path); err == nil {
+		machofile.MFile = mfile
+		machofile.Size = size
+		// need to loop through these maybe?
+		//machofile.Segments = mfile.Segment
+		fmt.Printf("fh Magic: %#x\n", mfile.FileHeader.Magic)
+		seg := mfile.Segment("__DATA")
+		if seg != nil {
+			fmt.Println(seg.Addr, seg.Addr+seg.Memsz)
+			// prints mem addrs of sections, but need names - map?
+			fmt.Println(mfile.Sections)
+			//fmt.Println(seg)
+		}
+	}
 
 	if err := analyzeMachOFile(data, machofile); err != nil {
 		return nil, err
