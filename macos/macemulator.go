@@ -122,7 +122,6 @@ func (emu *MacEmulator) GetHook(addr uint64) (string, string, *Hook) {
 	return "", "", nil
 }
 */
-
 // defines the basic log types available in macemulator, avaialble to be set via
 // command line flags
 const (

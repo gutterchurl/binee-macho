@@ -16,3 +16,9 @@ temp/
 os/
 os.zip
 .vscode/settings.json
+tests/testcode.go
+tests/example_fullhook
+tests/example_fullhook_pass
+tests/example_partial_hook_filewrite
+tests/XAgent_972e907a901a7716f3b8f9651eadd65a0ce09bbc78a1ceacff6f52056af8e8f4
+tests/XAgent_e031299fa1381b40c660b8cd831bb861654f900a1e2952b1a76bedf140972a81
