@@ -5,13 +5,40 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Launch mach-o file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${file}",
+            "env": {},
+            "args": ["tests/MachOConsoleApp_x64"]
+        },
+        {
+            "name": "TestPE with args",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${file}",
+            "env": {},
+            "args": ["-M", "test", "tests/XAgent_972e907a901a7716f3b8f9651eadd65a0ce09bbc78a1ceacff6f52056af8e8f4"]
+        },
+        {
+            "name": "Launch mach-o w/args",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${file}",
             "env": {},
             "args": ["-M", "test", "tests/MachOConsoleApp_x64"]
+        },
+        {
+            "name": "TestPE",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${file}",
+            "env": {},
+            "args": ["tests/XAgent_972e907a901a7716f3b8f9651eadd65a0ce09bbc78a1ceacff6f52056af8e8f4"]
         }
     ]
 }

@@ -3,7 +3,7 @@
 package main
 
 import (
-	"debug/macho"
+	//"debug/macho"
 	"flag"
 	"fmt"
 	"log"
@@ -28,7 +28,7 @@ func main() {
 	verbose2 := flag.Bool("vv", false, "verbose level 2")
 	verbose1 := flag.Bool("v", false, "verbose level 1")
 	runDLLMain := flag.Bool("m", false, "call DLLMain while loading DLLs")
-	machox64 := flag.String("M", "", "specify path to 64-bit mach-o file")
+	//machox64 := flag.String("M", "", "specify path to 64-bit mach-o file")
 	rootFolder := flag.String("r", "os/win10_32/", "root path of mock file system, defaults to ./os/win10_32")
 	maxTicks := flag.Int64("t", 0, "maximum number of instructions to emulate before stopping emulation, default is 0 and will run forever or until other stopping event")
 
@@ -118,7 +118,8 @@ func main() {
 		return
 	}
 
-	if *machox64 != "" {
+	if machofile.IsMachO(flag.Arg(0)) {
+
 		options := macos.InitMacEmulatorOptions()
 		options.VerboseLevel = verboseLevel
 		options.ConfigPath = *configFilePath
@@ -136,26 +137,23 @@ func main() {
 		// test code:
 
 		fmt.Printf("hello mach-o! %s\n", flag.Arg(0))
-		if m, err := machofile.LoadMachOFile(flag.Arg(0)); err == nil {
-			fmt.Println(m.MFile)
+		m, err := machofile.LoadMachOFile(flag.Arg(0))
 
-			/* This causes a segfault
-			seg := m.MFile.Segment("__DATA")
-			if seg != nil {
-				fmt.Println(seg.Addr, seg.Addr+seg.Memsz)
-				//fmt.Println(seg)
-			}*/
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		if mfile, err := macho.Open(flag.Arg(0)); err == nil {
-			fmt.Printf("fh Magic: %#x\n", mfile.FileHeader.Magic)
-			seg := mfile.Segment("__DATA")
-			if seg != nil {
-				fmt.Println(seg.Addr, seg.Addr+seg.Memsz)
-				fmt.Println(mfile.Sections)
-				//fmt.Println(seg)
+		/*
+			if mfile, err := macho.Open(flag.Arg(0)); err == nil {
+				seg := mfile.Segment("__DATA")
+				if seg != nil {
+					fmt.Println(seg.Addr, seg.Addr+seg.Memsz)
+					fmt.Println(mfile.Sections)
+					//fmt.Println(seg)
+				}
 			}
-		}
+		*/
+		fmt.Println(m.MFile.Magic)
 
 		//fmt.Printf(m.)
 		/*
