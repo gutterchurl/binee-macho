@@ -134,6 +134,7 @@ func main() {
 		} else {
 			options.LogType = windows.LogTypeStdout
 		}
+
 		// test code:
 
 		fmt.Printf("hello mach-o! %s\n", flag.Arg(0))
@@ -155,16 +156,15 @@ func main() {
 		*/
 		fmt.Println(m.MFile.Magic)
 
-		//fmt.Printf(m.)
-		/*
-			// now start the emulator with the various options
-			emu, err := macos.Load(flag.Arg(0), flag.Args()[1:], options)
-			if err != nil {
-				log.Fatal(err)
-			}
+		// now start the emulator with the various options
+		emu, err := macos.Load(flag.Arg(0), flag.Args()[1:], options)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-			emu.Start()
-		*/
+		fmt.Println(emu.Binary)
+		//emu.Start()
+
 		return
 	}
 

@@ -23,28 +23,27 @@ type Env struct {
 	Value string `yaml:"value"`
 }
 
-/*
-// WinOptions struct contains all the yaml definitions for various supported
+// MacOptions struct contains all the yaml definitions for various supported
 // configuration settings. These can be passed to emulation via the `-c` flag.
-// If this yaml is passed in, it will be parsed and override ALL the default settings
-type WinOptions struct {
-	CodePageIdentifier int               `yaml:"code_page_identifier"`
-	ComputerName       string            `yaml:"computer_name"`
-	CurrentLocale      int               `yaml:"current_locale"`
-	DllLoadReason      int               `yaml:"dll_load_reason"`
-	Env                []Env             `yaml:"environment"`
-	KeyboardType       int               `yaml:"keyboard_type"`
-	KeyboardSubType    int               `yaml:"keyboard_subtype"`
-	KeyboardFuncKeys   int               `yaml:"keyboard_funckeys"`
-	OsMajorVersion     int               `yaml:"os_major_version"`
-	OsMinorVersion     int               `yaml:"os_minor_version"`
-	ProcessorsCount    int               `yaml:"processors_count"`
-	ProcessorType      int               `yaml:"processsor_type"`
-	ProcessorLevel     int               `yaml:"processor_level"`
-	ProcessorRevision  int               `yaml:"processor_revision"`
-	Root               string `yaml:"root"`
-	LocaleSortOrder    int    `yaml:"locale_sort_order"`
-	SystemTime         struct {
+// If this yaml is passed in, it will be parsed and override ALL the default
+// settings. This functionality is not yet fully implemented.
+type MacOptions struct {
+	//CodePageIdentifier int               `yaml:"code_page_identifier"`
+	ComputerName      string `yaml:"computer_name"`
+	CurrentLocale     int    `yaml:"current_locale"`
+	Env               []Env  `yaml:"environment"`
+	KeyboardType      int    `yaml:"keyboard_type"`
+	KeyboardSubType   int    `yaml:"keyboard_subtype"`
+	KeyboardFuncKeys  int    `yaml:"keyboard_funckeys"`
+	OsMajorVersion    int    `yaml:"os_major_version"`
+	OsMinorVersion    int    `yaml:"os_minor_version"`
+	ProcessorsCount   int    `yaml:"processors_count"`
+	ProcessorType     int    `yaml:"processsor_type"`
+	ProcessorLevel    int    `yaml:"processor_level"`
+	ProcessorRevision int    `yaml:"processor_revision"`
+	Root              string `yaml:"root"`
+	LocaleSortOrder   int    `yaml:"locale_sort_order"`
+	SystemTime        struct {
 		Year        int `yaml:"year"`
 		Month       int `yaml:"month"`
 		DayOfWeek   int `yaml:"day_of_week"`
@@ -56,10 +55,9 @@ type WinOptions struct {
 	} `yaml:"system_time"`
 	User string `yaml:"user"`
 }
-*/
 
 // MacEmulator type should be a emulator type the eventually will support the
-// Emulator interface. This particular emulator is generic to x86 32/64 bit.
+// Emulator interface. This particular emulator is generic to x86 64-bit.
 type MacEmulator struct {
 	UcMode         int
 	UcArch         int
@@ -73,7 +71,6 @@ type MacEmulator struct {
 	Binary         string
 	Verbosity      int
 	// may add functionality here for custom dylds
-	//ShowDll            bool
 	Args       []string
 	Argc       uint64
 	Argv       uint64
@@ -122,6 +119,7 @@ func (emu *MacEmulator) GetHook(addr uint64) (string, string, *Hook) {
 	return "", "", nil
 }
 */
+
 // defines the basic log types available in macemulator, avaialble to be set via
 // command line flags
 const (
@@ -132,25 +130,21 @@ const (
 
 // MacEmulatorOptions will get passed into the MacEmulator
 type MacEmulatorOptions struct {
-	RootFolder string
-	// RunDLLMain   bool
+	RootFolder   string
 	ConfigPath   string
 	VerboseLevel int
-	// ShowDLL      bool
-	MaxTicks int64
-	LogType  int
+	MaxTicks     int64
+	LogType      int
 }
 
 // InitMacEmulatorOptions will build a default option struct to pass into MacEmulator - may need to add options for loading custom dylds
 func InitMacEmulatorOptions() *MacEmulatorOptions {
 	return &MacEmulatorOptions{
-		RootFolder: "os/macos10_15/",
-		//RunDLLMain:   false,
+		RootFolder:   "os/macos10_15/",
 		ConfigPath:   "",
 		VerboseLevel: 0,
-		//ShowDLL:      false,
-		MaxTicks: 0,
-		LogType:  LogTypeStdout,
+		MaxTicks:     0,
+		LogType:      LogTypeStdout,
 	}
 }
 
@@ -163,12 +157,12 @@ func Load(path string, args []string, options *MacEmulatorOptions) (*MacEmulator
 	var err error
 
 	//load the mach-o file
-	file, err := machofile.LoadMachOFile(path)
+	mfile, err := machofile.LoadMachOFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return LoadMem(file, path, args, options)
+	return LoadMem(mfile, path, args, options)
 }
 
 // LoadMem will load a pefile from an already initiated object
@@ -374,6 +368,7 @@ type ModulePair struct {
 	Module  string
 	Address uint64
 }
+
 type ModuleList []ModulePair
 
 func (m ModuleList) Len() int               { return len(m) }
@@ -417,7 +412,7 @@ func (emu *MacEmulator) lookupLibByAddress(addr uint64) string {
 
 // setLastError will set the error in the proper structure within the emulated
 // memory space
-func (emu *WinEmulator) setLastError(er uint64) error {
+func (emu *MacEmulator) setLastError(er uint64) error {
 	bs := make([]byte, emu.PtrSize)
 	offset := uint64(0x34)
 	if emu.PtrSize == 8 {
