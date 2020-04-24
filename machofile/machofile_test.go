@@ -1,24 +1,27 @@
 package machofile
 
-/*
-func TestLoadExe(t *testing.T) {
-	pe, err := LoadPeFile("../tests/ConsoleApplication1_x86.exe")
+import "testing"
+
+func TestLoadMachO(t *testing.T) {
+	mfile, err := LoadMachOFile("../tests/MachOConsoleApp_x64")
 	if err != nil {
-		t.Errorf("Error loading %s\n", pe.Path)
+		t.Errorf("Error loading %s\n", mfile.Path)
 	}
 
-	if len(pe.ImportedDlls()) != 7 {
-		t.Errorf("Wrong number of imported dlls for %s, 7 == %d\n", pe.Path, len(pe.Imports))
-	}
+	/*
+		if len(pe.ImportedDlls()) != 7 {
+			t.Errorf("Wrong number of imported dlls for %s, 7 == %d\n", pe.Path, len(pe.Imports))
+		}
 
-	var count int = len(pe.Imports)
+		var count int = len(pe.Imports)
 
-	if count != 43 {
-		t.Errorf("%s total number of imported functions should be 43 == %d\n", pe.Path, count)
-	}
-
+		if count != 43 {
+			t.Errorf("%s total number of imported functions should be 43 == %d\n", pe.Path, count)
+		}
+	*/
 }
 
+/*
 func TestLoadExe2(t *testing.T) {
 	pe, err := LoadPeFile("../tests/ConsoleApplication1_x86.exe")
 	if err != nil {

@@ -6,6 +6,7 @@ github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 h1:q763qf9huN11kDQavWs
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/unicorn-engine/unicorn v0.0.0-20191025210239-3b17db0d84a2 h1:zKa6xZVMPu9+l1pRM38PA1cijzy77qYyvq23c1Qcn+4=
 github.com/unicorn-engine/unicorn v0.0.0-20191025210239-3b17db0d84a2/go.mod h1:vm0xtY46O4X0t1J6Ob+syPhvL38XAAidXGXmTSlcMZM=
+github.com/unicorn-engine/unicorn v0.0.0-20200324082304-930cb9ada8a4 h1:PFSQ6wGi/zsiHPoOWej86x5Xsmg8uu/k0xqNErILtgE=
 golang.org/x/arch v0.0.0-20191101135251-a0d8588395bd h1:e1iK2rWppIPlzzqtjXT/p6WR/+ritGZ8xkfL8uDZb0g=
 golang.org/x/arch v0.0.0-20191101135251-a0d8588395bd/go.mod h1:flIaEI6LNU6xOCD5PaJvn9wGP0agmIOqjrtsKGRguv4=
 golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e h1:N7DeIrjYszNmSW409R3frPPwglRwMkXSBzwVbkOjLLA=
