@@ -1,1 +1,3 @@
-package macos_test
+package macos
+
+//import "testing"

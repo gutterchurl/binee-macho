@@ -20,46 +20,72 @@ type DataDirectory struct {
 	Size           uint32
 }
 
+// The following types are defined at
+// https://golang.org/pkg/debug/macho/
 /*
-// Actually Section64 but leaving it this way for now
-type Section struct {
-	Name     [16]byte
-	Seg      [16]byte
-	Addr     uint64
-	Size     uint64
-	Offset   uint32
-	Align    uint32
-	Reloff   uint32
-	Nreloc   uint32
-	Flags    uint32
-	Reserve1 uint32
-	Reserve2 uint32
-	Reserve3 uint32
-	//VirtualSize          uint32
-	//VirtualAddress       uint32
-	PointerToRelocations []*macho.Reloc
-	NumberOfRelocations  uint16
-	NumberOfLineNumbers  uint16
-	Characteristics      uint32
-	Raw                  []byte
-	Entropy              float64
+type Segment struct {
+    LoadBytes
+    SegmentHeader
+
+    // Embed ReaderAt for ReadAt method.
+    // Do not embed SectionReader directly
+    // to avoid having Read and Seek.
+    // If a client wants Read and Seek it must use
+    // Open() to avoid fighting over the seek offset
+    // with other clients.
+    io.ReaderAt
+    // contains filtered or unexported fields
+}
+/*
+
+/*
+type Segment64 struct {
+	Cmd     LoadCmd
+	Len     uint32
+	Name    [16]byte
+	Addr    uint64
+	Memsz   uint64
+	Offset  uint64
+	Filesz  uint64
+	Maxprot uint32
+	Prot    uint32
+	Nsect   uint32
+	Flag    uint32
 }
 */
 
-type Segment struct {
-	Name                 string
-	VirtualSize          uint32
-	VirtualAddress       uint32
-	Size                 uint32
-	Offset               uint32
-	PointerToRelocations uint32
-	PointerToLineNumbers uint32
-	NumberOfRelocations  uint16
-	NumberOfLineNumbers  uint16
-	Characteristics      uint32
-	Raw                  []byte
-	Entropy              float64
+/*
+type Section struct {
+    SectionHeader
+    Relocs []Reloc // Go 1.10
+
+    // Embed ReaderAt for ReadAt method.
+    // Do not embed SectionReader directly
+    // to avoid having Read and Seek.
+    // If a client wants Read and Seek it must use
+    // Open() to avoid fighting over the seek offset
+    // with other clients.
+    io.ReaderAt
+    // contains filtered or unexported fields
 }
+*/
+
+/*
+type Section64 struct {
+    Name     [16]byte
+    Seg      [16]byte
+    Addr     uint64
+    Size     uint64
+    Offset   uint32
+    Align    uint32
+    Reloff   uint32
+    Nreloc   uint32
+    Flags    uint32
+    Reserve1 uint32
+    Reserve2 uint32
+    Reserve3 uint32
+}
+*/
 
 /* Using native debug/macho for now - will implement
    a new type if we need more information
@@ -80,10 +106,9 @@ type MachOFile struct {
 	//Name             string //import name, apiset or on disk
 	//RealName         string //on disk short name
 	Sha256 string
-	//Sections	   *macho.File.Sections
-	//Sections       []*Section
-	sectionHeaders []*macho.SectionHeader
-	Segments       []*Segment
+	//Sections       []*macho.File.Sections
+	//sectionHeaders []*macho.SectionHeader
+	Segments       []*macho.Segment64
 	segmentHeaders []*macho.SegmentHeader
 	Size           int64
 	//MachOFileHeader *MachOFileHeader
@@ -202,8 +227,19 @@ func LoadMachOFile(path string) (*MachOFile, error) {
 	*/
 
 	// need to loop through these maybe?
-	//machofile.Segments = mfile.Segment
 	fmt.Printf("fh Magic: %#x\n", mfile.FileHeader.Magic)
+
+	for _, l := range mfile.Loads {
+		switch l := l.(type) {
+		case *macho.Segment:
+			fmt.Printf("Segment: %s\n", l.SegmentHeader.Name)
+		}
+	}
+
+	for _, load := range mfile.Loads {
+		fmt.Println(load)
+	}
+
 	seg := mfile.Segment("__DATA")
 	if seg != nil {
 		fmt.Println(seg.Addr, seg.Addr+seg.Memsz)

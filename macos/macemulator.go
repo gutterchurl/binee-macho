@@ -2,6 +2,7 @@ package macos
 
 import (
 	//"encoding/binary"
+	"errors"
 	"fmt"
 	//"io/ioutil"
 	//"os"
@@ -83,13 +84,13 @@ type MacEmulator struct {
 	EntryPoint         uint64
 	NextLibAddress     uint64
 	//MemRegions         *MemRegions
-	//Handles            map[uint64]*Handle
+	//Handles           map[uint64]*Handle
 	LoadedModules map[string]uint64
 	Heap          *core.HeapManager
 	CPU           *core.CpuManager
-	//Scheduler          *ScheduleManager
-	Fls [64]uint64
-	//Opts               MacOptions
+	//Scheduler         *ScheduleManager
+	Fls  [64]uint64
+	Opts MacOptions
 	// these commands are used to keep state during single step mode
 	LastCommand  string
 	Breakpoints  map[uint64]uint64
@@ -150,11 +151,12 @@ func InitMacEmulatorOptions() *MacEmulatorOptions {
 
 // Load is the entry point for loading a PE file in the emulated environment
 func Load(path string, args []string, options *MacEmulatorOptions) (*MacEmulator, error) {
-	if options == nil {
-		options = InitMacEmulatorOptions()
-	}
 
 	var err error
+	options = InitMacEmulatorOptions()
+	if options == nil {
+		return nil, errors.New("Emulator options not populated")
+	}
 
 	//load the mach-o file
 	mfile, err := machofile.LoadMachOFile(path)
@@ -180,6 +182,10 @@ func LoadMem(mfile *machofile.MachOFile, path string, args []string, options *Ma
 	if emu.logType == LogTypeSlice {
 		emu.InstructionLog = make([]*InstructionLog, 0)
 	}
+	emu.Binary = path
+	emu.Verbosity = options.VerboseLevel
+	emu.Args = args
+	emu.Argc = uint64(len(args))
 
 	fmt.Print("LoadMem fn\n")
 	return emu, err

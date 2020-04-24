@@ -139,6 +139,8 @@ func main() {
 
 		fmt.Printf("hello mach-o! %s\n", flag.Arg(0))
 		m, err := machofile.LoadMachOFile(flag.Arg(0))
+		//var cmd macho.LoadCmd
+		//fmt.Println(cmd)
 
 		if err != nil {
 			log.Fatal(err)
@@ -155,6 +157,7 @@ func main() {
 			}
 		*/
 		fmt.Println(m.MFile.Magic)
+		fmt.Println(m.MFile.FileHeader.Type)
 
 		// now start the emulator with the various options
 		emu, err := macos.Load(flag.Arg(0), flag.Args()[1:], options)
